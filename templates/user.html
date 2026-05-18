@@ -230,6 +230,7 @@
         <div class="progress-bar">
           <div class="progress-fill" style="width: {{ s.pct }}%"></div>
         </div>
+        <div style="font-size:12px;color:#888;margin-top:10px;">Session: {{ s.session.duration_label }}</div>
       {% else %}
         <div class="st-free-label">Available — ask staff to allocate</div>
       {% endif %}
@@ -239,7 +240,7 @@
 
   <div class="rate-note">
     Hourly rate: <strong>{{ currency_symbol }}{{ hourly_rate }}/hr</strong> &nbsp;·&nbsp;
-    Sessions: 1 hr, 2 hr, 3 hr &nbsp;·&nbsp;
+    Sessions: custom durations available &nbsp;·&nbsp;
     {{ stations | selectattr('session', 'none') | list | length }} station(s) currently free
   </div>
 

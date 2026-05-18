@@ -1,6 +1,6 @@
 # Cyber Cafe Management System
 
-A small Flask app for managing cyber cafe logins, station sessions, retail POS, and customer rankings.
+A small Flask app for managing cyber cafe logins, station sessions, retail POS, customer registrations with Aadhaar upload, and customer rankings.
 
 ## Project structure
 
@@ -23,6 +23,12 @@ Open `http://127.0.0.1:5000`
 
 - Admin: `admin / admin123`
 - User: `user1 / user123`
+
+## User registration
+
+- New users can create their own account from the login page.
+- Aadhaar card upload is mandatory during account creation.
+- Uploaded Aadhaar files are stored in `static/uploads/aadhaar/`.
 
 ## Environment variables
 
@@ -96,4 +102,6 @@ git push -u origin main
 
 - This app currently stores data in memory, so restarting the server resets sessions and activity.
 - Uploaded screenshots are stored in `static/uploads/payments/`.
+- Aadhaar uploads are stored in `static/uploads/aadhaar/`.
+- Station sessions support preset or custom durations such as 1 hour 20 minutes, billed pro-rata.
 - For real production use, the next step is moving users, sessions, and sales into a database.

@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import secrets
 import urllib.parse
 import urllib.request
@@ -33,18 +34,22 @@ GOOGLE_ADMIN_EMAIL = os.environ.get("GOOGLE_ADMIN_EMAIL", "").strip().lower()
 PAYMENT_UPI_ID = os.environ.get("PAYMENT_UPI_ID", "your-upi-id@bank")
 PAYMENT_RECEIVER = os.environ.get("PAYMENT_RECEIVER", "Cyber Cafe")
 PAYMENT_QR_IMAGE_URL = os.environ.get("PAYMENT_QR_IMAGE_URL", "").strip()
-UPLOAD_DIR = BASE_DIR / "static" / "uploads" / "payments"
-ALLOWED_PAYMENT_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+PAYMENT_UPLOAD_DIR = BASE_DIR / "static" / "uploads" / "payments"
+AADHAAR_UPLOAD_DIR = BASE_DIR / "static" / "uploads" / "aadhaar"
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
+ALLOWED_PAYMENT_EXTENSIONS = set(ALLOWED_IMAGE_EXTENSIONS)
+ALLOWED_AADHAAR_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS | {"pdf"}
 
 app = Flask(__name__, template_folder=str(BASE_DIR / "templates"))
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+PAYMENT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+AADHAAR_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 USERS = {
-    "admin":  {"password": "admin123",  "role": "admin", "name": "Administrator"},
-    "user1":  {"password": "user123",   "role": "user",  "name": "Alex Rivera"},
-    "user2":  {"password": "user123",   "role": "user",  "name": "Sam Torres"},
+    "admin":  {"password": "admin123",  "role": "admin", "name": "Administrator", "aadhaar_path": None},
+    "user1":  {"password": "user123",   "role": "user",  "name": "Alex Rivera", "aadhaar_path": None},
+    "user2":  {"password": "user123",   "role": "user",  "name": "Sam Torres", "aadhaar_path": None},
 }
 
 HOURLY_RATE = 40
@@ -65,10 +70,10 @@ retail_items = [
 ]
 
 customers = [
-    {"id": 1, "name": "Alex Rivera",  "username": "user1", "total_hours": 120, "total_spent": 5800, "sessions": 45},
-    {"id": 2, "name": "Sam Torres",   "username": "user2", "total_hours": 67,  "total_spent": 3200, "sessions": 28},
-    {"id": 3, "name": "Jordan Lee",   "username": None,    "total_hours": 34,  "total_spent": 1900, "sessions": 15},
-    {"id": 4, "name": "Casey Morgan", "username": None,    "total_hours": 12,  "total_spent": 620,  "sessions": 8},
+    {"id": 1, "name": "Alex Rivera",  "username": "user1", "total_hours": 120, "total_spent": 5800, "sessions": 45, "aadhaar_path": None},
+    {"id": 2, "name": "Sam Torres",   "username": "user2", "total_hours": 67,  "total_spent": 3200, "sessions": 28, "aadhaar_path": None},
+    {"id": 3, "name": "Jordan Lee",   "username": None,    "total_hours": 34,  "total_spent": 1900, "sessions": 15, "aadhaar_path": None},
+    {"id": 4, "name": "Casey Morgan", "username": None,    "total_hours": 12,  "total_spent": 620,   "sessions": 8, "aadhaar_path": None},
 ]
 
 activity_log = [{"time": "00:00", "msg": "System initialized"}]
@@ -127,8 +132,39 @@ def cart_details(cart_data):
         items.append({**item, "qty": entry["qty"], "subtotal": subtotal})
     return items, total
 
+def upload_allowed(filename, allowed_extensions):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
+
 def payment_upload_allowed(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_PAYMENT_EXTENSIONS
+    return upload_allowed(filename, ALLOWED_PAYMENT_EXTENSIONS)
+
+def aadhaar_upload_allowed(filename):
+    return upload_allowed(filename, ALLOWED_AADHAAR_EXTENSIONS)
+
+def normalize_username(raw_username):
+    username = re.sub(r"[^a-z0-9_]+", "_", raw_username.strip().lower())
+    return username.strip("_")
+
+def format_duration_label(duration_minutes):
+    hours, minutes = divmod(duration_minutes, 60)
+    parts = []
+    if hours:
+        parts.append(f"{hours} hr" if hours == 1 else f"{hours} hrs")
+    if minutes:
+        parts.append(f"{minutes} min")
+    return " ".join(parts) or "0 min"
+
+def format_currency(amount):
+    if isinstance(amount, float) and amount.is_integer():
+        amount = int(amount)
+    if isinstance(amount, int):
+        return str(amount)
+    return f"{amount:.2f}".rstrip("0").rstrip(".")
+
+def get_session_duration_minutes(session_data):
+    if session_data.get("duration_minutes"):
+        return int(session_data["duration_minutes"])
+    return int(session_data.get("hours", 0) * 60)
 
 def build_payment_reference():
     return f"CC-{datetime.now().strftime('%Y%m%d%H%M%S')}-{secrets.token_hex(2).upper()}"
@@ -158,9 +194,11 @@ def payment_summary_counts():
     rejected = sum(1 for payment in payment_requests if payment["status"] == "rejected")
     return pending, verified, rejected
 
-def ensure_customer_profile(username, name):
+def ensure_customer_profile(username, name, aadhaar_path=None):
     customer = next((c for c in customers if c.get("username") == username), None)
     if customer:
+        if aadhaar_path and not customer.get("aadhaar_path"):
+            customer["aadhaar_path"] = aadhaar_path
         return customer
 
     customer = {
@@ -170,6 +208,7 @@ def ensure_customer_profile(username, name):
         "total_hours": 0,
         "total_spent": 0,
         "sessions": 0,
+        "aadhaar_path": aadhaar_path,
     }
     customers.append(customer)
     log_event(f"Customer profile created - {name}")
@@ -209,9 +248,15 @@ def get_station_display():
                 log_event(f"{s['name']} expired — {sess['customer']}")
                 stations[sid]["session"] = None
             else:
+                duration_minutes = get_session_duration_minutes(sess)
+                duration_seconds = max(duration_minutes * 60, 1)
                 row["session"] = {**sess, "remaining": rem,
-                    "remaining_fmt": f"{rem//3600:02d}:{(rem%3600)//60:02d}:{rem%60:02d}"}
-                row["pct"] = int((1 - rem / (sess["hours"] * 3600)) * 100)
+                    "remaining_fmt": f"{rem//3600:02d}:{(rem%3600)//60:02d}:{rem%60:02d}",
+                    "duration_minutes": duration_minutes,
+                    "duration_label": sess.get("duration_label") or format_duration_label(duration_minutes),
+                    "charge_display": format_currency(sess.get("charge", 0)),
+                }
+                row["pct"] = int((1 - rem / duration_seconds) * 100)
         result.append(row)
     return result
 
@@ -248,6 +293,58 @@ def login():
             return redirect(url_for("admin_dashboard") if user["role"] == "admin" else url_for("user_dashboard"))
         error = "Invalid username or password."
     return render_template("login.html", error=error)
+
+@app.route("/register", methods=["POST"])
+def register_user():
+    if "username" in session:
+        return redirect(url_for("admin_dashboard") if session["role"] == "admin" else url_for("user_dashboard"))
+
+    name = request.form.get("name", "").strip()
+    raw_username = request.form.get("username", "")
+    username = normalize_username(raw_username)
+    password = request.form.get("password", "").strip()
+    confirm_password = request.form.get("confirm_password", "").strip()
+    aadhaar_file = request.files.get("aadhaar_card")
+
+    if not name:
+        flash("Full name is required to create an account.")
+        return redirect(url_for("login"))
+    if not username or len(username) < 3:
+        flash("Choose a username with at least 3 letters or numbers.")
+        return redirect(url_for("login"))
+    if username in USERS:
+        flash("That username is already in use.")
+        return redirect(url_for("login"))
+    if len(password) < 4:
+        flash("Password must be at least 4 characters long.")
+        return redirect(url_for("login"))
+    if password != confirm_password:
+        flash("Passwords do not match.")
+        return redirect(url_for("login"))
+    if not aadhaar_file or not aadhaar_file.filename:
+        flash("Aadhaar card upload is required to create a user ID.")
+        return redirect(url_for("login"))
+    if not aadhaar_upload_allowed(aadhaar_file.filename):
+        flash("Aadhaar upload must be a PNG, JPG, JPEG, WEBP, or PDF file.")
+        return redirect(url_for("login"))
+
+    ext = aadhaar_file.filename.rsplit(".", 1)[1].lower()
+    filename = secure_filename(f"{username}-{secrets.token_hex(4)}.{ext}")
+    save_path = AADHAAR_UPLOAD_DIR / filename
+    aadhaar_file.save(save_path)
+    aadhaar_path = f"uploads/aadhaar/{filename}"
+
+    USERS[username] = {
+        "password": password,
+        "role": "user",
+        "name": name,
+        "aadhaar_path": aadhaar_path,
+    }
+    ensure_customer_profile(username, name, aadhaar_path=aadhaar_path)
+    login_user(username, "user", name)
+    log_event(f"New user ID created — {name} ({username})")
+    flash("Account created successfully.")
+    return redirect(url_for("user_dashboard"))
 
 @app.route("/login/google")
 def login_google():
@@ -321,20 +418,32 @@ def admin_dashboard():
 @admin_required
 def allocate():
     sid      = int(request.form["station_id"])
-    hours    = int(request.form["hours"])
     customer = request.form["customer"].strip()
+    duration_minutes = int(request.form.get("duration_minutes", "0") or 0)
     if not customer:
         flash("Customer name required.")
+        return redirect(url_for("admin_dashboard"))
+    if duration_minutes < 5:
+        flash("Session duration must be at least 5 minutes.")
+        return redirect(url_for("admin_dashboard"))
+    if duration_minutes > 720:
+        flash("Session duration cannot be more than 12 hours.")
         return redirect(url_for("admin_dashboard"))
     if stations[sid]["session"]:
         flash(f"PC-{sid:02d} is already occupied.")
         return redirect(url_for("admin_dashboard"))
     now = datetime.now()
-    stations[sid]["session"] = {"customer": customer, "hours": hours,
+    charge = round(duration_minutes * HOURLY_RATE / 60, 2)
+    duration_label = format_duration_label(duration_minutes)
+    stations[sid]["session"] = {"customer": customer, "hours": round(duration_minutes / 60, 2),
+        "duration_minutes": duration_minutes,
+        "duration_label": duration_label,
         "started_at": now.strftime("%H:%M"),
-        "end_time": now + timedelta(hours=hours),
-        "charge": hours * HOURLY_RATE}
-    log_event(f"PC-{sid:02d} started — {customer} ({hours}h) {CURRENCY_SYMBOL}{hours*HOURLY_RATE}")
+        "end_time": now + timedelta(minutes=duration_minutes),
+        "charge": charge}
+    log_event(
+        f"PC-{sid:02d} started — {customer} ({duration_label}) {CURRENCY_SYMBOL}{format_currency(charge)}"
+    )
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/release/<int:sid>")
@@ -414,7 +523,7 @@ def pos_payment_submit():
     full_cart, total = cart_details(cart_data)
     ext = screenshot.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"{payment_reference.lower()}-{secrets.token_hex(4)}.{ext}")
-    save_path = UPLOAD_DIR / filename
+    save_path = PAYMENT_UPLOAD_DIR / filename
     screenshot.save(save_path)
 
     payment_requests.insert(0, {

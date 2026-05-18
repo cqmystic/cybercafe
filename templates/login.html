@@ -92,7 +92,7 @@
 
   .form-box {
     width: 100%;
-    max-width: 360px;
+    max-width: 420px;
   }
 
   .form-title {
@@ -118,7 +118,8 @@
   }
 
   input[type="text"],
-  input[type="password"] {
+  input[type="password"],
+  input[type="file"] {
     width: 100%;
     padding: 12px 14px;
     border: 1.5px solid #ddd;
@@ -129,6 +130,11 @@
     outline: none;
     transition: border-color 0.2s;
     margin-bottom: 20px;
+  }
+
+  input[type="file"] {
+    padding: 10px 12px;
+    background: #fff;
   }
 
   input:focus { border-color: #000; }
@@ -205,6 +211,46 @@
     line-height: 1.6;
   }
 
+  .section-divider {
+    margin: 28px 0 22px;
+    border-top: 1px solid #ececec;
+    padding-top: 20px;
+  }
+
+  .register-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .register-sub {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .btn-register {
+    width: 100%;
+    padding: 13px;
+    background: #fff;
+    color: #000;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .register-note {
+    margin-top: -8px;
+    margin-bottom: 18px;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+  }
+
   .error-msg {
     background: #000;
     color: #fff;
@@ -227,7 +273,7 @@
   <div class="brand">Cyber Cafe System</div>
   <div class="headline">Manage your<br>café with ease.</div>
   <div class="divider"></div>
-  <p class="subline">Computer allocation, retail point-of-sale, and customer rankings — all in one place.</p>
+  <p class="subline">Computer allocation, retail point-of-sale, customer rankings, and account safety checks in one place.</p>
   <div style="margin-top: 48px;">
     <div style="font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:14px;">Login Credentials</div>
     <div class="roles">
@@ -288,6 +334,31 @@
 
     <div style="margin-top:28px;padding-top:20px;border-top:1px solid #eee;font-size:12px;color:#aaa;text-align:center;">
       Cyber Cafe Management System &nbsp;·&nbsp; v1.0
+    </div>
+
+    <div class="section-divider">
+      <div class="register-title">Create User ID</div>
+      <div class="register-sub">New users must upload their Aadhaar card while creating an account.</div>
+
+      <form method="POST" action="/register" enctype="multipart/form-data">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="Enter full name" required>
+
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Choose username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Create password" required>
+
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password" placeholder="Re-enter password" required>
+
+        <label>Aadhaar Card</label>
+        <input type="file" name="aadhaar_card" accept=".png,.jpg,.jpeg,.webp,.pdf" required>
+        <div class="register-note">Accepted files: PNG, JPG, JPEG, WEBP, PDF.</div>
+
+        <button type="submit" class="btn-register">CREATE ACCOUNT</button>
+      </form>
     </div>
   </div>
 </div>

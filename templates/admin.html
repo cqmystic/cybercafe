@@ -195,6 +195,27 @@
 
   .hour-btns { display: flex; gap: 8px; }
 
+  .duration-custom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .duration-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 13px;
+    outline: none;
+    background: #fff;
+  }
+
+  .duration-hint {
+    font-size: 12px;
+    color: #888;
+  }
+
   .btn-hour {
     flex: 1;
     padding: 9px 0;
@@ -209,6 +230,16 @@
   }
 
   .btn-hour:hover, .btn-hour.sel { background: #000; color: #fff; border-color: #000; }
+
+  .aadhaar-link {
+    color: #000;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid #000;
+  }
+
+  .aadhaar-link:hover { opacity: 0.7; }
 
   .alloc-name {
     width: 100%;
@@ -701,21 +732,30 @@
             <div class="progress-fill" id="prog-{{ s.id }}" style="width: {{ s.pct }}%"></div>
           </div>
           <div class="session-meta">
-            {{ s.session.hours }}h session &nbsp;·&nbsp; started {{ s.session.started_at }}
-            &nbsp;·&nbsp; {{ currency_symbol }}{{ s.session.charge }}
+            {{ s.session.duration_label }} session &nbsp;·&nbsp; started {{ s.session.started_at }}
+            &nbsp;·&nbsp; {{ currency_symbol }}{{ s.session.charge_display }}
           </div>
           <a href="/admin/release/{{ s.id }}" class="btn-release">Release Station</a>
 
         {% else %}
           <form class="alloc-form" method="POST" action="/admin/allocate" id="form-{{ s.id }}">
             <input type="hidden" name="station_id" value="{{ s.id }}">
-            <input type="hidden" name="hours" value="1" id="hours-{{ s.id }}">
+            <input type="hidden" name="duration_minutes" value="60" id="duration-{{ s.id }}">
 
             <div class="hour-btns">
-              <button type="button" class="btn-hour sel" onclick="setHours({{ s.id }}, 1, this)">1 Hr</button>
-              <button type="button" class="btn-hour"     onclick="setHours({{ s.id }}, 2, this)">2 Hr</button>
-              <button type="button" class="btn-hour"     onclick="setHours({{ s.id }}, 3, this)">3 Hr</button>
+              <button type="button" class="btn-hour sel" onclick="setDurationMinutes({{ s.id }}, 60, this)">1 Hr</button>
+              <button type="button" class="btn-hour" onclick="setDurationMinutes({{ s.id }}, 120, this)">2 Hr</button>
+              <button type="button" class="btn-hour" onclick="setDurationMinutes({{ s.id }}, 180, this)">3 Hr</button>
             </div>
+
+            <div class="duration-custom">
+              <input class="duration-input" type="number" min="0" max="12" value="1" id="custom-hours-{{ s.id }}"
+                oninput="syncCustomDuration({{ s.id }})" placeholder="Hours">
+              <input class="duration-input" type="number" min="0" max="55" step="5" value="0" id="custom-minutes-{{ s.id }}"
+                oninput="syncCustomDuration({{ s.id }})" placeholder="Minutes">
+            </div>
+
+            <div class="duration-hint">Custom time supported, for example 1 hr 20 min. Billing stays pro-rata.</div>
 
             <input class="alloc-name" type="text" name="customer"
               placeholder="Customer name" required>
@@ -964,6 +1004,8 @@
           <tr>
             <th>#</th>
             <th>Customer</th>
+            <th>Username</th>
+            <th>ID Proof</th>
             <th>Rank</th>
             <th>Total Hours</th>
             <th>Sessions</th>
@@ -975,6 +1017,14 @@
           <tr>
             <td style="font-weight:700;color:#aaa;">{{ c.position }}</td>
             <td style="font-weight:600;">{{ c.name }}</td>
+            <td>{{ c.username or 'Guest' }}</td>
+            <td>
+              {% if c.aadhaar_path %}
+              <a class="aadhaar-link" href="{{ url_for('static', filename=c.aadhaar_path) }}" target="_blank">View Aadhaar</a>
+              {% else %}
+              <span style="color:#aaa;">Not uploaded</span>
+              {% endif %}
+            </td>
             <td>
               {% set rc = {'Bronze':'#a0522d','Silver':'#666','Gold':'#b8860b','Platinum':'#008080','Diamond':'#000'} %}
               <span class="rank-badge" style="color:{{ rc[c.rank] }};">{{ c.rank }}</span>
@@ -1021,12 +1071,28 @@
 </div><!-- /main -->
 
 <script>
-// Hour selector
-function setHours(stationId, hours, btn) {
-  document.getElementById('hours-' + stationId).value = hours;
+function setDurationMinutes(stationId, durationMinutes, btn) {
+  document.getElementById('duration-' + stationId).value = durationMinutes;
+  document.getElementById('custom-hours-' + stationId).value = Math.floor(durationMinutes / 60);
+  document.getElementById('custom-minutes-' + stationId).value = durationMinutes % 60;
   const form = document.getElementById('form-' + stationId);
   form.querySelectorAll('.btn-hour').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
+}
+
+function syncCustomDuration(stationId) {
+  const hoursInput = document.getElementById('custom-hours-' + stationId);
+  const minutesInput = document.getElementById('custom-minutes-' + stationId);
+  const durationField = document.getElementById('duration-' + stationId);
+  const hours = Math.max(0, parseInt(hoursInput.value || '0', 10) || 0);
+  const minutes = Math.max(0, Math.min(55, parseInt(minutesInput.value || '0', 10) || 0));
+
+  hoursInput.value = hours;
+  minutesInput.value = minutes;
+  durationField.value = (hours * 60) + minutes;
+
+  const form = document.getElementById('form-' + stationId);
+  form.querySelectorAll('.btn-hour').forEach(b => b.classList.remove('sel'));
 }
 
 // Live countdown
