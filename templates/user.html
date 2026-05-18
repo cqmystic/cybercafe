@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User — Cyber Cafe</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #000;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 56px;
+  }
+
+  .topbar-brand { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+  .topbar-right { display: flex; align-items: center; gap: 20px; }
+  .topbar-user  { font-size: 13px; color: #888; }
+
+  .btn-logout-top {
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #555;
+    text-decoration: none;
+    border: 1px solid #333;
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+
+  .btn-logout-top:hover { color: #fff; border-color: #fff; }
+
+  /* ── MAIN ── */
+  .main { max-width: 900px; margin: 0 auto; padding: 36px 24px; }
+
+  .welcome { margin-bottom: 32px; }
+  .welcome h1 { font-size: 24px; font-weight: 700; }
+  .welcome p  { font-size: 14px; color: #888; margin-top: 4px; }
+
+  /* ── PROFILE CARD ── */
+  .profile-card {
+    background: #000;
+    color: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .profile-stat { text-align: center; }
+  .profile-stat .val { font-size: 26px; font-weight: 700; }
+  .profile-stat .lbl { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #666; margin-top: 3px; }
+
+  .rank-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .rank-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .rank-lbl { font-size: 11px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── SECTION ── */
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #aaa;
+    margin-bottom: 14px;
+    margin-top: 28px;
+  }
+
+  /* ── STATION GRID (USER VIEW) ── */
+  .stations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 14px; }
+
+  .st-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .st-card.occupied { border-color: #000; }
+
+  .st-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .st-name { font-size: 15px; font-weight: 700; }
+
+  .badge {
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px; font-weight: 600;
+  }
+
+  .badge-free     { background: #f0f0f0; color: #888; }
+  .badge-occupied { background: #000; color: #fff; }
+
+  .st-free-label  { font-size: 13px; color: #aaa; }
+  .st-user        { font-size: 13px; color: #555; }
+  .st-timer       { font-size: 22px; font-weight: 700; letter-spacing: 1px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  .progress-bar {
+    height: 2px; background: #f0f0f0; border-radius: 2px; margin-top: 10px; overflow: hidden;
+  }
+
+  .progress-fill { height: 100%; background: #000; border-radius: 2px; }
+
+  /* ── SERVICES ── */
+  .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px,1fr)); gap: 12px; }
+
+  .svc-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .svc-name  { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .svc-unit  { font-size: 11px; color: #aaa; margin-bottom: 8px; }
+  .svc-price { font-size: 18px; font-weight: 700; }
+
+  .notice {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px;
+    font-size: 13px;
+    color: #666;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .rate-note {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: #888;
+    margin-top: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">Cyber Cafe</div>
+  <div class="topbar-right">
+    <span class="topbar-user">{{ name }}</span>
+    <a href="/logout" class="btn-logout-top">SIGN OUT</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="welcome">
+    <h1>Hello, {{ name.split()[0] }}</h1>
+    <p>Here's your account overview and current station availability.</p>
+  </div>
+
+  <!-- PROFILE / RANK CARD -->
+  {% if customer %}
+  <div class="profile-card">
+    <div>
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#555;margin-bottom:8px;">Your Account</div>
+      <div style="font-size:20px;font-weight:700;">{{ customer.name }}</div>
+    </div>
+
+    <div class="profile-stat">
+      <div class="val">{{ customer.total_hours }}h</div>
+      <div class="lbl">Total Hours</div>
+    </div>
+
+    <div class="profile-stat">
+      <div class="val">{{ customer.sessions }}</div>
+      <div class="lbl">Sessions</div>
+    </div>
+
+    <div class="profile-stat">
+      <div class="val">{{ currency_symbol }}{{ "{:,}".format(customer.total_spent) }}</div>
+      <div class="lbl">Total Spent</div>
+    </div>
+
+    <div class="rank-display">
+      <div class="rank-name">{{ customer.rank }}</div>
+      <div class="rank-lbl">Current Rank</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="notice">No customer profile linked to your account. Contact the admin.</div>
+  {% endif %}
+
+  <!-- STATION AVAILABILITY -->
+  <div class="section-title">Station Availability</div>
+
+  <div class="stations-grid">
+    {% for s in stations %}
+    <div class="st-card {{ 'occupied' if s.session else '' }}">
+      <div class="st-head">
+        <div class="st-name">{{ s.name }}</div>
+        <span class="badge {{ 'badge-occupied' if s.session else 'badge-free' }}">
+          {{ 'In Use' if s.session else 'Free' }}
+        </span>
+      </div>
+
+      {% if s.session %}
+        <div class="st-user">Occupied</div>
+        <div class="st-timer" data-remaining="{{ s.session.remaining }}">{{ s.session.remaining_fmt }}</div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ s.pct }}%"></div>
+        </div>
+      {% else %}
+        <div class="st-free-label">Available — ask staff to allocate</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="rate-note">
+    Hourly rate: <strong>{{ currency_symbol }}{{ hourly_rate }}/hr</strong> &nbsp;·&nbsp;
+    Sessions: 1 hr, 2 hr, 3 hr &nbsp;·&nbsp;
+    {{ stations | selectattr('session', 'none') | list | length }} station(s) currently free
+  </div>
+
+  <!-- SERVICES PRICE LIST -->
+  <div class="section-title">Services & Pricing</div>
+
+  <div class="services-grid">
+    {% for item in retail_items %}
+    <div class="svc-card">
+      <div class="svc-name">{{ item.name }}</div>
+      <div class="svc-unit">{{ item.unit }}</div>
+      <div class="svc-price">{{ currency_symbol }}{{ item.price }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div><!-- /main -->
+
+<script>
+function tick() {
+  document.querySelectorAll('[data-remaining]').forEach(el => {
+    let rem = parseInt(el.dataset.remaining, 10);
+    if (isNaN(rem) || rem <= 0) return;
+    rem -= 1;
+    el.dataset.remaining = rem;
+    const h = Math.floor(rem / 3600);
+    const m = Math.floor((rem % 3600) / 60);
+    const s = rem % 60;
+    el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  });
+}
+setInterval(tick, 1000);
+</script>
+
+</body>
+</html>

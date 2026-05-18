@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Cafe — Login</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #fff;
+    color: #000;
+    min-height: 100vh;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .left {
+    width: 50%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px;
+  }
+
+  .brand {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 48px;
+  }
+
+  .headline {
+    font-size: 42px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 20px;
+  }
+
+  .subline {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.7;
+    max-width: 340px;
+  }
+
+  .divider {
+    width: 40px;
+    height: 2px;
+    background: #fff;
+    margin: 32px 0;
+  }
+
+  .roles {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .role-pill {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid #222;
+    border-radius: 6px;
+  }
+
+  .role-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .role-label { font-size: 13px; color: #999; }
+  .role-cred  { font-size: 12px; color: #444; margin-left: auto; }
+
+  .right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    background: #fafafa;
+  }
+
+  .form-box {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .form-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .form-sub {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 36px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    color: #333;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    background: #fff;
+    color: #000;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+  }
+
+  input:focus { border-color: #000; }
+
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: #000;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-login:hover { background: #222; }
+
+  .btn-google {
+    width: 100%;
+    padding: 13px;
+    background: #fff;
+    color: #000;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    border: 1.5px solid #d8d8d8;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .btn-google:hover { border-color: #000; background: #f7f7f7; }
+
+  .btn-google.disabled {
+    cursor: not-allowed;
+    color: #999;
+    background: #f3f3f3;
+    border-color: #e1e1e1;
+    pointer-events: none;
+  }
+
+  .divider-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 4px;
+    color: #999;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .divider-text::before,
+  .divider-text::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #e7e7e7;
+  }
+
+  .helper-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  .error-msg {
+    background: #000;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .left { display: none; }
+    .right { padding: 40px 24px; background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left">
+  <div class="brand">Cyber Cafe System</div>
+  <div class="headline">Manage your<br>café with ease.</div>
+  <div class="divider"></div>
+  <p class="subline">Computer allocation, retail point-of-sale, and customer rankings — all in one place.</p>
+  <div style="margin-top: 48px;">
+    <div style="font-size:11px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-bottom:14px;">Login Credentials</div>
+    <div class="roles">
+      <div class="role-pill">
+        <div class="role-dot"></div>
+        <span class="role-label">Admin</span>
+        <span class="role-cred">admin / admin123</span>
+      </div>
+      <div class="role-pill">
+        <div class="role-dot" style="background:#666;"></div>
+        <span class="role-label">User</span>
+        <span class="role-cred">user1 / user123</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right">
+  <div class="form-box">
+    <div class="form-title">Welcome back</div>
+    <div class="form-sub">Sign in to your account to continue.</div>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="error-msg">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <label>Username</label>
+      <input type="text" name="username" placeholder="Enter username" required autofocus>
+
+      <label>Password</label>
+      <input type="password" name="password" placeholder="Enter password" required>
+
+      <button type="submit" class="btn-login">SIGN IN</button>
+    </form>
+
+    <div class="divider-text">or</div>
+
+    {% if google_login_enabled %}
+    <a href="/login/google" class="btn-google">
+      <span>G</span>
+      <span>Continue with Google</span>
+    </a>
+    {% else %}
+    <div class="btn-google disabled">
+      <span>G</span>
+      <span>Google sign-in not configured</span>
+    </div>
+    <div class="helper-note">{{ google_login_status_message }}</div>
+    {% endif %}
+
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #eee;font-size:12px;color:#aaa;text-align:center;">
+      Cyber Cafe Management System &nbsp;·&nbsp; v1.0
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

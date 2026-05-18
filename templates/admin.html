@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Cyber Cafe</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    color: #000;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+  }
+
+  .sidebar-brand {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .sidebar-brand .cafe-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+  }
+
+  .sidebar-brand .role-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    margin-top: 3px;
+  }
+
+  nav { padding: 20px 0; flex: 1; }
+
+  .nav-section {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #444;
+    padding: 0 24px;
+    margin: 16px 0 8px;
+  }
+
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 24px;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+
+  nav a:hover { color: #fff; background: #111; }
+
+  nav a.active {
+    color: #fff;
+    background: #111;
+    border-left: 2px solid #fff;
+  }
+
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .sidebar-footer .user-name { font-size: 13px; color: #aaa; margin-bottom: 10px; }
+
+  .btn-logout {
+    display: block;
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #666;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .btn-logout:hover { border-color: #fff; color: #fff; }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 32px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .page-title { font-size: 22px; font-weight: 700; }
+  .page-sub   { font-size: 13px; color: #888; margin-top: 3px; }
+
+  /* ── STAT CARDS ── */
+  .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .stat-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; }
+  .stat-sub   { font-size: 12px; color: #aaa; margin-top: 4px; }
+
+  /* ── STATIONS GRID ── */
+  .stations-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+  .station-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .station-card.active { border-color: #000; }
+
+  .sc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .sc-name   { font-size: 16px; font-weight: 700; }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .badge-free   { background: #f0f0f0; color: #888; }
+  .badge-active { background: #000; color: #fff; }
+
+  .sc-customer { font-size: 13px; color: #555; margin-bottom: 8px; }
+
+  .timer {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: #f0f0f0;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #000;
+    border-radius: 2px;
+    transition: width 0.5s;
+  }
+
+  .session-meta { font-size: 12px; color: #aaa; margin-bottom: 14px; }
+
+  /* ── ALLOCATE FORM ── */
+  .alloc-form { display: flex; flex-direction: column; gap: 10px; }
+
+  .hour-btns { display: flex; gap: 8px; }
+
+  .btn-hour {
+    flex: 1;
+    padding: 9px 0;
+    border: 1.5px solid #e0e0e0;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #333;
+  }
+
+  .btn-hour:hover, .btn-hour.sel { background: #000; color: #fff; border-color: #000; }
+
+  .alloc-name {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 5px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .alloc-name:focus { border-color: #000; }
+
+  .btn-allocate {
+    width: 100%;
+    padding: 10px;
+    background: #000;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-release {
+    width: 100%;
+    padding: 10px;
+    background: #fff;
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid #000;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    transition: all 0.15s;
+  }
+
+  .btn-release:hover { background: #000; color: #fff; }
+
+  /* ── POS ── */
+  .pos-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+
+  .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+
+  .item-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .item-card:hover { border-color: #000; }
+
+  .item-name  { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .item-unit  { font-size: 11px; color: #aaa; margin-bottom: 10px; }
+  .item-price { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+
+  .btn-add {
+    width: 100%;
+    padding: 8px;
+    background: #000;
+    color: #fff;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .cart-panel {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 20px;
+    height: fit-content;
+    position: sticky;
+    top: 32px;
+  }
+
+  .cart-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; letter-spacing: 0.5px; }
+
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+
+  .cart-item-name { font-weight: 600; }
+  .cart-item-meta { font-size: 11px; color: #aaa; }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #ccc;
+    padding: 0;
+    line-height: 1;
+  }
+
+  .btn-remove:hover { color: #000; }
+
+  .cart-total {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0 16px;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .btn-checkout {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #000;
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 14px;
+    background: #fff;
+    color: #000;
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover { background: #000; color: #fff; }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    background: #fff;
+    color: #000;
+    border: 1.5px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-danger:hover { border-color: #000; }
+
+  .payment-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 20px;
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 22px;
+  }
+
+  .panel-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .panel-sub {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 18px;
+  }
+
+  .qr-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    border: 1px solid #ededed;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .qr-wrap img {
+    width: 260px;
+    max-width: 100%;
+    display: block;
+    border-radius: 8px;
+  }
+
+  .kv-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .kv-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f2f2f2;
+  }
+
+  .kv-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .kv-label { color: #888; }
+  .kv-value { font-weight: 600; text-align: right; word-break: break-word; }
+
+  .upload-form {
+    display: grid;
+    gap: 14px;
+  }
+
+  .text-input,
+  .file-input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid #dfdfdf;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+  }
+
+  .payment-list {
+    display: grid;
+    gap: 16px;
+  }
+
+  .payment-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .payment-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .payment-ref { font-size: 16px; font-weight: 700; }
+  .payment-meta { font-size: 12px; color: #888; margin-top: 4px; }
+
+  .status-badge {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .status-pending { background: #fff7e8; color: #8a5a00; }
+  .status-verified { background: #eefaf0; color: #166534; }
+  .status-rejected { background: #fbecec; color: #991b1b; }
+
+  .payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 18px;
+  }
+
+  .payment-items {
+    display: grid;
+    gap: 8px;
+  }
+
+  .payment-item-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+
+  .payment-item-row:last-child { border-bottom: none; }
+
+  .proof-box img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ececec;
+    display: block;
+  }
+
+  .proof-link {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #000;
+    text-decoration: none;
+  }
+
+  .proof-link:hover { text-decoration: underline; }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 960px) {
+    .payment-layout,
+    .payment-grid,
+    .summary-row,
+    .pos-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── RANKINGS ── */
+  .rank-table { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+
+  .rank-table table { width: 100%; border-collapse: collapse; }
+  .rank-table th {
+    text-align: left;
+    padding: 12px 20px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+  }
+  .rank-table td {
+    padding: 14px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid #f8f8f8;
+  }
+  .rank-table tr:last-child td { border-bottom: none; }
+  .rank-table tr:hover td { background: #fafafa; }
+
+  .rank-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1.5px solid currentColor;
+    text-transform: uppercase;
+  }
+
+  /* ── LOG ── */
+  .log-table { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+
+  .log-row {
+    display: flex;
+    gap: 20px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f8f8f8;
+    font-size: 13px;
+    align-items: baseline;
+  }
+
+  .log-row:last-child { border-bottom: none; }
+
+  .log-time { color: #aaa; font-size: 12px; width: 45px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .log-msg  { color: #333; }
+
+  /* ── FLASH ── */
+  .flash {
+    background: #000;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .empty-state { text-align: center; padding: 40px; color: #ccc; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <div class="cafe-name">Cyber Cafe</div>
+    <div class="role-tag">Admin Panel</div>
+  </div>
+
+  <nav>
+    <div class="nav-section">Management</div>
+    <a href="/admin" class="{{ 'active' if page == 'stations' else '' }}">
+      <span class="nav-icon">⬜</span> Stations
+    </a>
+    <a href="/admin/pos" class="{{ 'active' if page == 'pos' else '' }}">
+      <span class="nav-icon">◻</span> Retail POS
+    </a>
+    <a href="/admin/payments" class="{{ 'active' if page == 'payments' else '' }}">
+      <span class="nav-icon">₹</span> Payments
+    </a>
+
+    <div class="nav-section">Reports</div>
+    <a href="/admin/rankings" class="{{ 'active' if page == 'rankings' else '' }}">
+      <span class="nav-icon">◈</span> Rankings
+    </a>
+    <a href="/admin/log" class="{{ 'active' if page == 'log' else '' }}">
+      <span class="nav-icon">≡</span> Activity Log
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-name">{{ name }}</div>
+    <a href="/logout" class="btn-logout">SIGN OUT</a>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- ══ STATIONS PAGE ══ -->
+  {% if page == 'stations' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">Computer Stations</div>
+        <div class="page-sub">Allocate and manage PC sessions</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Active</div>
+        <div class="stat-value">{{ active }}</div>
+        <div class="stat-sub">of 6 stations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Available</div>
+        <div class="stat-value">{{ free }}</div>
+        <div class="stat-sub">ready to use</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rate</div>
+        <div class="stat-value">{{ currency_symbol }}{{ hourly_rate }}</div>
+        <div class="stat-sub">per hour</div>
+      </div>
+    </div>
+
+    <div class="stations-grid" id="stations-grid">
+      {% for s in stations %}
+      <div class="station-card {{ 'active' if s.session else '' }}" id="card-{{ s.id }}">
+        <div class="sc-header">
+          <div class="sc-name">{{ s.name }}</div>
+          <span class="badge {{ 'badge-active' if s.session else 'badge-free' }}">
+            {{ 'Active' if s.session else 'Free' }}
+          </span>
+        </div>
+
+        {% if s.session %}
+          <div class="sc-customer">{{ s.session.customer }}</div>
+          <div class="timer" id="timer-{{ s.id }}" data-remaining="{{ s.session.remaining }}">
+            {{ s.session.remaining_fmt }}
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="prog-{{ s.id }}" style="width: {{ s.pct }}%"></div>
+          </div>
+          <div class="session-meta">
+            {{ s.session.hours }}h session &nbsp;·&nbsp; started {{ s.session.started_at }}
+            &nbsp;·&nbsp; {{ currency_symbol }}{{ s.session.charge }}
+          </div>
+          <a href="/admin/release/{{ s.id }}" class="btn-release">Release Station</a>
+
+        {% else %}
+          <form class="alloc-form" method="POST" action="/admin/allocate" id="form-{{ s.id }}">
+            <input type="hidden" name="station_id" value="{{ s.id }}">
+            <input type="hidden" name="hours" value="1" id="hours-{{ s.id }}">
+
+            <div class="hour-btns">
+              <button type="button" class="btn-hour sel" onclick="setHours({{ s.id }}, 1, this)">1 Hr</button>
+              <button type="button" class="btn-hour"     onclick="setHours({{ s.id }}, 2, this)">2 Hr</button>
+              <button type="button" class="btn-hour"     onclick="setHours({{ s.id }}, 3, this)">3 Hr</button>
+            </div>
+
+            <input class="alloc-name" type="text" name="customer"
+              placeholder="Customer name" required>
+
+            <button type="submit" class="btn-allocate">Start Session</button>
+          </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+  <!-- ══ POS PAGE ══ -->
+  {% elif page == 'pos' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">Retail POS</div>
+        <div class="page-sub">Point of sale for retail items and services</div>
+      </div>
+    </div>
+
+    <div class="pos-layout">
+      <div>
+        <div class="items-grid">
+          {% for item in retail_items %}
+          <div class="item-card">
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-unit">{{ item.unit }}</div>
+            <div class="item-price">{{ currency_symbol }}{{ item.price }}</div>
+            <form method="POST" action="/admin/pos/add">
+              <input type="hidden" name="item_id" value="{{ item.id }}">
+              <button type="submit" class="btn-add">+ Add to Cart</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="cart-panel">
+        <div class="cart-title">CART</div>
+
+        {% if cart %}
+          {% for item in cart %}
+          <div class="cart-item">
+            <div>
+              <div class="cart-item-name">{{ item.name }}</div>
+              <div class="cart-item-meta">×{{ item.qty }} @ {{ currency_symbol }}{{ item.price }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;">{{ currency_symbol }}{{ item.subtotal }}</span>
+              <a href="/admin/pos/remove/{{ item.id }}">
+                <button class="btn-remove">×</button>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="cart-total">
+            <span>Total</span>
+            <span>{{ currency_symbol }}{{ cart_total }}</span>
+          </div>
+
+          <a href="/admin/pos/checkout" class="btn-checkout">Continue to Payment</a>
+
+        {% else %}
+          <div class="empty-state">Cart is empty.<br>Add items from the catalog.</div>
+        {% endif %}
+      </div>
+    </div>
+
+  <!-- ══ PAYMENT PAGE ══ -->
+  {% elif page == 'payment' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">QR Payment</div>
+        <div class="page-sub">Collect payment, upload screenshot, then send it for verification</div>
+      </div>
+      <a href="/admin/pos" class="btn-secondary">Back to POS</a>
+    </div>
+
+    <div class="payment-layout">
+      <div class="panel">
+        <div class="panel-title">Order Summary</div>
+        <div class="panel-sub">Reference {{ payment_reference }}</div>
+
+        <div class="payment-items">
+          {% for item in cart %}
+          <div class="payment-item-row">
+            <span>{{ item.name }} ×{{ item.qty }}</span>
+            <strong>{{ currency_symbol }}{{ item.subtotal }}</strong>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="cart-total" style="margin-top:14px; padding-top:18px; border-top:1px solid #f1f1f1;">
+          <span>Total Amount</span>
+          <span>{{ currency_symbol }}{{ cart_total }}</span>
+        </div>
+
+        <form method="POST" action="/admin/pos/payment" enctype="multipart/form-data" class="upload-form">
+          <input type="hidden" name="payment_reference" value="{{ payment_reference }}">
+
+          <div>
+            <div class="panel-sub" style="margin-bottom:8px; color:#555;">Payer name</div>
+            <input class="text-input" type="text" name="payer_name" placeholder="Enter payer name" required>
+          </div>
+
+          <div>
+            <div class="panel-sub" style="margin-bottom:8px; color:#555;">Upload payment screenshot</div>
+            <input class="file-input" type="file" name="payment_screenshot" accept=".png,.jpg,.jpeg,.webp" required>
+          </div>
+
+          <button type="submit" class="btn-checkout">Submit for Verification</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Scan & Pay</div>
+        <div class="panel-sub">Use any UPI app to pay the exact amount</div>
+
+        <div class="qr-wrap">
+          <img src="{{ payment_qr_url }}" alt="Payment QR code">
+        </div>
+
+        <div class="kv-list">
+          <div class="kv-item">
+            <span class="kv-label">UPI ID</span>
+            <span class="kv-value">{{ payment_upi_id }}</span>
+          </div>
+          <div class="kv-item">
+            <span class="kv-label">Receiver</span>
+            <span class="kv-value">{{ payment_receiver }}</span>
+          </div>
+          <div class="kv-item">
+            <span class="kv-label">Amount</span>
+            <span class="kv-value">{{ currency_symbol }}{{ cart_total }}</span>
+          </div>
+          <div class="kv-item">
+            <span class="kv-label">Reference</span>
+            <span class="kv-value">{{ payment_reference }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- ══ PAYMENTS PAGE ══ -->
+  {% elif page == 'payments' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">Payment Verification</div>
+        <div class="page-sub">Review uploaded screenshots and mark each payment</div>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ pending_payments }}</div>
+        <div class="stat-sub">awaiting review</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Verified</div>
+        <div class="stat-value">{{ verified_payments }}</div>
+        <div class="stat-sub">approved payments</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rejected</div>
+        <div class="stat-value">{{ rejected_payments }}</div>
+        <div class="stat-sub">needs reupload</div>
+      </div>
+    </div>
+
+    {% if payments %}
+    <div class="payment-list">
+      {% for payment in payments %}
+      <div class="payment-card">
+        <div class="payment-head">
+          <div>
+            <div class="payment-ref">{{ payment.reference }}</div>
+            <div class="payment-meta">{{ payment.payer_name }} · {{ payment.created_at }}</div>
+          </div>
+          <span class="status-badge status-{{ payment.status }}">{{ payment.status }}</span>
+        </div>
+
+        <div class="payment-grid">
+          <div>
+            <div class="kv-list" style="margin-bottom:16px;">
+              <div class="kv-item">
+                <span class="kv-label">Total</span>
+                <span class="kv-value">{{ currency_symbol }}{{ payment.total }}</span>
+              </div>
+              <div class="kv-item">
+                <span class="kv-label">Reviewed by</span>
+                <span class="kv-value">{{ payment.verified_by or 'Not reviewed yet' }}</span>
+              </div>
+              <div class="kv-item">
+                <span class="kv-label">Reviewed at</span>
+                <span class="kv-value">{{ payment.verified_at or 'Pending' }}</span>
+              </div>
+            </div>
+
+            <div class="payment-items">
+              {% for item in payment['items'] %}
+              <div class="payment-item-row">
+                <span>{{ item.name }} ×{{ item.qty }}</span>
+                <strong>{{ currency_symbol }}{{ item.subtotal }}</strong>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="proof-box">
+            <img src="{{ url_for('static', filename=payment.screenshot_path) }}" alt="Payment screenshot">
+            <a class="proof-link" href="{{ url_for('static', filename=payment.screenshot_path) }}" target="_blank">Open full screenshot</a>
+          </div>
+        </div>
+
+        {% if payment.status == 'pending' %}
+        <div class="action-row">
+          <form method="POST" action="/admin/payments/{{ payment.id }}/verify">
+            <button type="submit" class="btn-checkout">Verify Payment</button>
+          </form>
+          <form method="POST" action="/admin/payments/{{ payment.id }}/reject">
+            <button type="submit" class="btn-danger">Reject</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="background:#fff;border:1px solid #e8e8e8;border-radius:8px; color:#888;">No payment submissions yet.</div>
+    {% endif %}
+
+  <!-- ══ RANKINGS PAGE ══ -->
+  {% elif page == 'rankings' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">Customer Rankings</div>
+        <div class="page-sub">Sorted by total usage hours</div>
+      </div>
+    </div>
+
+    <div class="rank-table">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Customer</th>
+            <th>Rank</th>
+            <th>Total Hours</th>
+            <th>Sessions</th>
+            <th>Total Spent</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td style="font-weight:700;color:#aaa;">{{ c.position }}</td>
+            <td style="font-weight:600;">{{ c.name }}</td>
+            <td>
+              {% set rc = {'Bronze':'#a0522d','Silver':'#666','Gold':'#b8860b','Platinum':'#008080','Diamond':'#000'} %}
+              <span class="rank-badge" style="color:{{ rc[c.rank] }};">{{ c.rank }}</span>
+            </td>
+            <td>{{ c.total_hours }}h</td>
+            <td>{{ c.sessions }}</td>
+            <td>{{ currency_symbol }}{{ "{:,}".format(c.total_spent) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:18px 20px;">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#aaa;margin-bottom:12px;">Rank Thresholds</div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:13px;color:#555;">
+        <span>Bronze — 0h+</span>
+        <span>Silver — 5h+</span>
+        <span>Gold — 20h+</span>
+        <span>Platinum — 50h+</span>
+        <span>Diamond — 100h+</span>
+      </div>
+    </div>
+
+  <!-- ══ LOG PAGE ══ -->
+  {% elif page == 'log' %}
+    <div class="page-header">
+      <div>
+        <div class="page-title">Activity Log</div>
+        <div class="page-sub">All system events in chronological order</div>
+      </div>
+    </div>
+
+    <div class="log-table">
+      {% for entry in log %}
+      <div class="log-row">
+        <span class="log-time">{{ entry.time }}</span>
+        <span class="log-msg">{{ entry.msg }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div><!-- /main -->
+
+<script>
+// Hour selector
+function setHours(stationId, hours, btn) {
+  document.getElementById('hours-' + stationId).value = hours;
+  const form = document.getElementById('form-' + stationId);
+  form.querySelectorAll('.btn-hour').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+// Live countdown
+function tick() {
+  document.querySelectorAll('[data-remaining]').forEach(el => {
+    let rem = parseInt(el.dataset.remaining, 10);
+    if (isNaN(rem) || rem <= 0) return;
+    rem -= 1;
+    el.dataset.remaining = rem;
+    const h = Math.floor(rem / 3600);
+    const m = Math.floor((rem % 3600) / 60);
+    const s = rem % 60;
+    el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+    // Update progress bar
+    const sid = el.id.replace('timer-','');
+    const prog = document.getElementById('prog-' + sid);
+    if (prog) {
+      const total = parseInt(prog.parentElement.dataset.total || '3600', 10);
+      prog.style.width = Math.min(100, ((total - rem) / total * 100)) + '%';
+    }
+  });
+}
+setInterval(tick, 1000);
+</script>
+
+</body>
+</html>
